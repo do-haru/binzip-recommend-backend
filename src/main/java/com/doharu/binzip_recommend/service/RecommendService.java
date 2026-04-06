@@ -2,10 +2,18 @@ package com.doharu.binzip_recommend.service;
 
 import com.doharu.binzip_recommend.domain.House;
 import com.doharu.binzip_recommend.dto.RecommendHouse;
+import com.doharu.binzip_recommend.repository.HouseRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
+@RequiredArgsConstructor
 @Service
 public class RecommendService {
+
+    private final HouseRepository houseRepository;
+
     public RecommendHouse convert(House house) {
         return RecommendHouse.builder()
                 .id(house.getId())
@@ -19,5 +27,12 @@ public class RecommendService {
                 .targetAgeRatio(null)
                 .price(0)
                 .build();
+    }
+
+    public List<RecommendHouse> getRecommendHouses() {
+        return houseRepository.findAll()
+                .stream()
+                .map(this::convert)
+                .toList();
     }
 }
