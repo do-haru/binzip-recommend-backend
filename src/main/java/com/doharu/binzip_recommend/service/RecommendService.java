@@ -15,7 +15,7 @@ public class RecommendService {
                 .latitude(0)
                 .longitude(0)
                 .facilityCount(0)
-                .crowd(0)
+                .crowd("LOW")
                 .targetAgeRatio(null)
                 .price(0)
                 .build();

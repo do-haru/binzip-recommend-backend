@@ -21,7 +21,7 @@ public class RecommendHouse {
     private double longitude;   // 해당 지역의 중심 경도 좌표
     private int facilityCount;  // 주변 편의시설 개수
 
-    private int crowd;          // 유동인구 수준
+    private String crowd;          // 유동인구 수준
     private Map<String, Double> targetAgeRatio; // 연령대별 방문 비율 정보
 
     private int price;          // 해당 빈집의 가격
