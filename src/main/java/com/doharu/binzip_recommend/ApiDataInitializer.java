@@ -1,0 +1,80 @@
+package com.doharu.binzip_recommend;
+
+import com.doharu.binzip_recommend.domain.House;
+import com.doharu.binzip_recommend.external.HouseApiClient;
+import com.doharu.binzip_recommend.external.HouseApiItem;
+import com.doharu.binzip_recommend.external.HouseApiResponse;
+import com.doharu.binzip_recommend.repository.HouseRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Configuration;
+
+import java.time.LocalDate;
+import java.util.List;
+
+@Configuration
+@RequiredArgsConstructor
+@Slf4j
+public class ApiDataInitializer implements CommandLineRunner {
+
+    private final HouseApiClient houseApiClient;
+    private final HouseRepository houseRepository;
+
+    @Override
+    public void run(String... args) throws Exception {
+        try {
+            // 1. API 호출
+            HouseApiResponse response = houseApiClient.fetchHouse();
+
+            List<HouseApiItem> items = response.getData();
+
+            // 2. 기존 데이터 삭제
+            houseRepository.deleteAll();
+
+            // 3. 변환 후 저장
+            for (HouseApiItem item : items) {
+                House house = House.builder()
+                        .regionName(item.getRegionName())
+                        .regionDetail(item.getRegionDetail())
+                        .area(parseDouble(item.getArea()))
+                        .houseType(item.getHouseType())
+                        .grade(parseGrade(item.getGrade()))
+                        .manager(item.getManager())
+                        .phone(item.getPhone())
+                        .updateDate(parseDate(item.getUpdateDate()))
+                        .build();
+                houseRepository.save(house);
+            }
+            log.info("API 데이터 저장 완료");
+        } catch (Exception e) {
+            log.info("API 데이터 로딩 실패: " + e.getMessage());
+        }
+    }
+
+    // ===== 변환 함수 =====
+
+    private double parseDouble(String value) {
+        try {
+            return Double.parseDouble(value);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private int parseGrade(String grade) {
+        try {
+            return Integer.parseInt(grade.replaceAll("[^0-9]", ""));
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private LocalDate parseDate(String date) {
+        try {
+            return LocalDate.parse(date);
+        } catch (Exception e) {
+            return LocalDate.now();
+        }
+    }
+}
