@@ -14,6 +14,10 @@ public class RecommendService {
 
     private final HouseRepository houseRepository;
 
+    public List<House> getAllHouses() {
+        return houseRepository.findAll();
+    }
+
     public RecommendHouse convert(House house) {
         return RecommendHouse.builder()
                 .id(house.getId())

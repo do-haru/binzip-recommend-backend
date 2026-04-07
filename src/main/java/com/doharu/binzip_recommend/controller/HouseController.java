@@ -17,12 +17,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class HouseController {
 
-    private final HouseRepository houseRepository;
     private final RecommendService recommendService;
 
     @GetMapping
     public List<House> getHouses() {
-        return houseRepository.findAll();
+        return recommendService.getAllHouses();
     }
 
     @GetMapping("/recommend")
