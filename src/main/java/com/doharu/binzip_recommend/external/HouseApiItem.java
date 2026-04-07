@@ -17,7 +17,7 @@ public class HouseApiItem {
     @JsonProperty("건축면적(제곱미터)")
     private String area;
 
-    @JsonProperty("주용도")
+    @JsonProperty("주택유형")
     private String houseType;
 
     @JsonProperty("등급판정결과")
