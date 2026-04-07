@@ -7,6 +7,7 @@ import com.doharu.binzip_recommend.service.RecommendService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -25,7 +26,7 @@ public class HouseController {
     }
 
     @GetMapping("/recommend")
-    public List<RecommendHouse> getRecommendHouses() {
-        return recommendService.getRecommendHouses();
+    public List<RecommendHouse> getRecommendHouses(@RequestParam String regionName) {
+        return recommendService.getRecommendHouses(regionName);
     }
 }

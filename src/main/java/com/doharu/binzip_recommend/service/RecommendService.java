@@ -29,8 +29,8 @@ public class RecommendService {
                 .build();
     }
 
-    public List<RecommendHouse> getRecommendHouses() {
-        return houseRepository.findAll()
+    public List<RecommendHouse> getRecommendHouses(String regionName) {
+        return houseRepository.findByRegionName(regionName)
                 .stream()
                 .map(this::convert)
                 .toList();
