@@ -1,4 +1,4 @@
-package com.doharu.binzip_recommend;
+package com.doharu.binzip_recommend.init;
 
 import com.doharu.binzip_recommend.domain.House;
 import com.doharu.binzip_recommend.external.HouseApiClient;
@@ -18,7 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Order(1)
 @Slf4j
-public class ApiDataInitializer implements CommandLineRunner {
+public class HouseDataInitializer implements CommandLineRunner {
 
     private final HouseApiClient houseApiClient;
     private final HouseRepository houseRepository;
@@ -35,19 +35,21 @@ public class ApiDataInitializer implements CommandLineRunner {
             houseRepository.deleteAll();
 
             // 3. 변환 후 저장
-            for (HouseApiItem item : items) {
-                House house = House.builder()
-                        .regionName(item.getRegionName())
-                        .regionDetail(item.getRegionDetail())
-                        .area(parseDouble(item.getArea()))
-                        .houseType(item.getHouseType())
-                        .grade(parseGrade(item.getGrade()))
-                        .manager(item.getManager())
-                        .phone(item.getPhone())
-                        .updateDate(parseDate(item.getUpdateDate()))
-                        .build();
-                houseRepository.save(house);
-            }
+            List<House> houses = items.stream()
+                    .map(item -> House.builder()
+                            .regionName(item.getRegionName())
+                            .regionDetail(item.getRegionDetail())
+                            .area(parseDouble(item.getArea()))
+                            .houseType(item.getHouseType())
+                            .grade(parseGrade(item.getGrade()))
+                            .manager(item.getManager())
+                            .phone(item.getPhone())
+                            .updateDate(parseDate(item.getUpdateDate()))
+                            .build()
+                    )
+                    .toList();
+            houseRepository.saveAll(houses);
+
             log.info("API 데이터 저장 완료");
         } catch (Exception e) {
             log.info("API 데이터 로딩 실패: " + e.getMessage());
