@@ -3,6 +3,7 @@ package com.doharu.binzip_recommend.controller;
 import com.doharu.binzip_recommend.domain.House;
 import com.doharu.binzip_recommend.domain.RegionDetailMeta;
 import com.doharu.binzip_recommend.domain.RecommendHouse;
+import com.doharu.binzip_recommend.dto.RecommendHouseResponse;
 import com.doharu.binzip_recommend.repository.RegionDetailMetaRepository;
 import com.doharu.binzip_recommend.service.RecommendHouseService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,11 @@ public class HouseController {
     public List<RecommendHouse> getRecommendHouses() {
         recommendService.generateRecommendHouse();
         return recommendService.getAllRecommendHouses();
+    }
+
+    @GetMapping("/recommend-dto")
+    public List<RecommendHouseResponse> getRecommendHousesDto() {
+        return recommendService.getRecommendResponse();
     }
 
     @GetMapping("/region-meta")
