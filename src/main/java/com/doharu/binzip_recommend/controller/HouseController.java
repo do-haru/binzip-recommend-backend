@@ -34,7 +34,6 @@ public class HouseController {
 
     @GetMapping("/recommend-dto")
     public List<RecommendHouseResponse> getRecommendHousesDto() {
-        recommendService.generateRecommendHouse();
         return recommendService.getRecommendResponse();
     }
 
