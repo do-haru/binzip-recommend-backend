@@ -70,6 +70,61 @@ public class RecommendHouseService {
         recommendHouseRepository.saveAll(list);
     }
 
+    public List<RecommendHouse> createRecommendByRegion(String regionName) {
+
+        List<House> houses = houseRepository.findByRegionName(regionName);
+
+        Map<String, double[]> cache = new HashMap<>();
+
+        return houses.stream()
+                .map(house -> {
+
+                    // 1️⃣ 주소 생성
+                    String address;
+
+                    if (house.getRegionDetail() == null || house.getRegionDetail().isBlank()) {
+                        address = house.getRegionName();
+                    } else {
+                        address = house.getRegionName() + " " + house.getRegionDetail();
+                    }
+
+                    address = address.trim();
+
+                    // 2️⃣ 좌표 캐시
+                    double[] latlon;
+
+                    if (cache.containsKey(address)) {
+                        latlon = cache.get(address);
+                    } else {
+                        Map result = tmapApiClient.getCoordinates(address);
+
+                        try {
+                            Thread.sleep(200); // 호출 제한
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        latlon = tmapApiClient.extractLatLon(result);
+
+                        if (latlon == null) {
+                            latlon = new double[]{0.0, 0.0};
+                        }
+
+                        cache.put(address, latlon);
+                    }
+
+                    // 3️⃣ RecommendHouse 생성
+                    return RecommendHouse.builder()
+                            .house(house)
+                            .latitude(latlon[0])
+                            .longitude(latlon[1])
+                            .price(1000)   // 임시
+                            .score(0.0)    // 임시
+                            .build();
+                })
+                .toList();
+    }
+
     public List<RecommendHouseResponse> getRecommendResponse() {
 
         return recommendHouseRepository.findAll()
