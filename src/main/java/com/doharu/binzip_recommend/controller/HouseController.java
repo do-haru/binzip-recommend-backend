@@ -3,9 +3,11 @@ package com.doharu.binzip_recommend.controller;
 import com.doharu.binzip_recommend.domain.House;
 import com.doharu.binzip_recommend.domain.RegionDetailMeta;
 import com.doharu.binzip_recommend.domain.RecommendHouse;
+import com.doharu.binzip_recommend.dto.QueryCondition;
 import com.doharu.binzip_recommend.dto.RecommendHouseResponse;
 import com.doharu.binzip_recommend.repository.HouseRepository;
 import com.doharu.binzip_recommend.repository.RegionDetailMetaRepository;
+import com.doharu.binzip_recommend.service.QueryParserService;
 import com.doharu.binzip_recommend.service.RecommendHouseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +23,7 @@ import java.util.List;
 public class HouseController {
 
     private final RecommendHouseService recommendService;
+    private final QueryParserService queryParserService;
     private final RegionDetailMetaRepository regionDetailMetaRepository;
     private final HouseRepository houseRepository;
 
@@ -31,6 +34,10 @@ public class HouseController {
     ) {
         System.out.println("regionName = " + regionName);
         System.out.println("query = " + query);
+
+        QueryCondition parse = queryParserService.parse(query);
+        System.out.println("parse = " + parse);
+
 
         return houseRepository.findByRegionName(regionName);
     }
