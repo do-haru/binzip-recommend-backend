@@ -24,6 +24,17 @@ public class HouseController {
     private final RegionDetailMetaRepository regionDetailMetaRepository;
     private final HouseRepository houseRepository;
 
+    @GetMapping("/test1")
+    public List<House> recommendTest(
+            @RequestParam String regionName,
+            @RequestParam String query
+    ) {
+        System.out.println("regionName = " + regionName);
+        System.out.println("query = " + query);
+
+        return houseRepository.findByRegionName(regionName);
+    }
+
     @GetMapping
     public List<House> getHouses() {
         return recommendService.getAllHouses();
