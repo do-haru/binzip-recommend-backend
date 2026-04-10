@@ -48,6 +48,51 @@ public class TmapApiClient {
         return response.getBody();
     }
 
+    public int getFacilityCount(double lat, double lon) {
+        if (lat == 0.0 && lon == 0.0) {
+            return 0;
+        }
+
+        String url = UriComponentsBuilder
+                .fromHttpUrl("https://apis.openapi.sk.com/tmap/pois")
+                .queryParam("version", 1)
+                .queryParam("searchKeyword", "편의점")
+                .queryParam("centerLat", lat)
+                .queryParam("centerLon", lon)
+                .queryParam("radius", 500)
+                .queryParam("count", 10)
+                .queryParam("reqCoordType", "WGS84GEO")  // 🔥 추가
+                .queryParam("resCoordType", "WGS84GEO")  // 🔥 추가
+                .toUriString();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("appKey", appKey);
+
+        HttpEntity<?> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<Map> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                Map.class
+        );
+
+        Map body = response.getBody();
+
+        if (body == null) return 0;
+
+        Map searchPoiInfo = (Map) body.get("searchPoiInfo");
+        if (searchPoiInfo == null) return 0;
+
+        Map pois = (Map) searchPoiInfo.get("pois");
+        if (pois == null) return 0;
+
+        List poiList = (List) pois.get("poi");
+        if (poiList == null) return 0;
+
+        return poiList.size();
+    }
+
     public double[] extractLatLon(Map response) {
 
         if (response == null) return null;
