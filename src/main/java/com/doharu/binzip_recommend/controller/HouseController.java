@@ -56,10 +56,10 @@ public class HouseController {
 //        return recommendService.getAllRecommendHouses();
 //    }
 
-    @GetMapping("/test-recommend")
-    public List<RecommendHouse> test(@RequestParam String regionName) {
-        return recommendService.createRecommendByRegion(regionName);
-    }
+//    @GetMapping("/test-recommend")
+//    public List<RecommendHouse> test(@RequestParam String regionName) {
+//        return recommendService.createRecommendByRegion(regionName);
+//    }
 
     @GetMapping("/recommend-dto")
     public List<RecommendHouseResponse> getRecommendHousesDto() {

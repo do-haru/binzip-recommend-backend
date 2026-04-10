@@ -28,14 +28,39 @@ public class RecommendService {
     }
 
     // House -> RecommendHouse 변환
-    private RecommendHouse toRecommendHouse(House house) {
+    private RecommendHouse toRecommendHouse(House house, double lat, double lon) {
+
+/*
+        // 1. 주소 문자열 만들기
+        String address;
+
+        if (house.getRegionDetail() == null || house.getRegionDetail().isBlank()) {
+            address = house.getRegionName();
+        } else {
+            address = house.getRegionName() + " " + house.getRegionDetail();
+        }
+
+        address = address.trim();
+
+        // 2. Tmap Api 호출 연결 및 좌표값 불러오기
+        Map result = tmapApiClient.getCoordinates(address);
+        double[] latlon = tmapApiClient.extractLatLon(result);
+
+        double lat = 0.0;
+        double lon = 0.0;
+
+        if (latlon != null) {
+            lat = latlon[0];
+            lon = latlon[1];
+        }
+*/
 
         return RecommendHouse.builder()
                 .house(house)
 
                 // 지금은 전부 기본값 (나중에 채움)
-                .latitude(0.0)
-                .longitude(0.0)
+                .latitude(lat)
+                .longitude(lon)
                 .facilityCount(0)
 
                 .crowd(0.0)
@@ -51,24 +76,16 @@ public class RecommendService {
         // 1. 기존 데이터 제거 (중복 방지)
         recommendHouseRepository.deleteAll();
 
-        // 2. 원본 조회
+        // 2. House 조회
         List<House> houses = houseRepository.findByRegionName(regionName);
+
+        // 3. 캐시 성성
+        Map<String, double[]> cache = new HashMap<>();
 
         // 3. 변환
         List<RecommendHouse> list = houses.stream()
-                .map(this::toRecommendHouse)
-                .toList();
-
-        // 4. 저장
-        recommendHouseRepository.saveAll(list);
-        /*
-        List<House> houses = houseRepository.findAll();
-
-        Map<String, double[]> cache = new HashMap<>();
-
-        // 변환
-        List<RecommendHouse> list = houses.stream()
                 .map(house -> {
+
                     String address;
 
                     if (house.getRegionDetail() == null || house.getRegionDetail().isBlank()) {
@@ -76,9 +93,12 @@ public class RecommendService {
                     } else {
                         address = house.getRegionName() + " " + house.getRegionDetail();
                     }
+
                     address = address.trim();
 
                     double[] latlon;
+
+                    // 🔥 캐시 사용
                     if (cache.containsKey(address)) {
                         latlon = cache.get(address);
                     } else {
@@ -88,19 +108,20 @@ public class RecommendService {
                         cache.put(address, latlon);
                     }
 
-                    return  RecommendHouse.builder()
-                            .house(house)
-                            .latitude(latlon[0])
-                            .longitude(latlon[1])
-                            .price(1000)     // 임시
-//                            .score(0.0)      // 임시
-                            .build();
+                    double lat = 0.0;
+                    double lon = 0.0;
+
+                    if (latlon != null) {
+                        lat = latlon[0];
+                        lon = latlon[1];
+                    }
+
+                    return toRecommendHouse(house, lat, lon);
                 })
                 .toList();
 
-        // 저장
+        // 4. 저장
         recommendHouseRepository.saveAll(list);
-*/
     }
 
     public List<House> getAllHouses() {
@@ -109,61 +130,6 @@ public class RecommendService {
 
     public List<RecommendHouse> getAllRecommendHouses() {
         return recommendHouseRepository.findAll();
-    }
-
-    public List<RecommendHouse> createRecommendByRegion(String regionName) {
-
-        List<House> houses = houseRepository.findByRegionName(regionName);
-
-        Map<String, double[]> cache = new HashMap<>();
-
-        return houses.stream()
-                .map(house -> {
-
-                    // 1️⃣ 주소 생성
-                    String address;
-
-                    if (house.getRegionDetail() == null || house.getRegionDetail().isBlank()) {
-                        address = house.getRegionName();
-                    } else {
-                        address = house.getRegionName() + " " + house.getRegionDetail();
-                    }
-
-                    address = address.trim();
-
-                    // 2️⃣ 좌표 캐시
-                    double[] latlon;
-
-                    if (cache.containsKey(address)) {
-                        latlon = cache.get(address);
-                    } else {
-                        Map result = tmapApiClient.getCoordinates(address);
-
-                        try {
-                            Thread.sleep(200); // 호출 제한
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-
-                        latlon = tmapApiClient.extractLatLon(result);
-
-                        if (latlon == null) {
-                            latlon = new double[]{0.0, 0.0};
-                        }
-
-                        cache.put(address, latlon);
-                    }
-
-                    // 3️⃣ RecommendHouse 생성
-                    return RecommendHouse.builder()
-                            .house(house)
-                            .latitude(latlon[0])
-                            .longitude(latlon[1])
-                            .price(1000)   // 임시
-//                            .score(0.0)    // 임시
-                            .build();
-                })
-                .toList();
     }
 
     public List<RecommendHouseResponse> getRecommendResponse() {
