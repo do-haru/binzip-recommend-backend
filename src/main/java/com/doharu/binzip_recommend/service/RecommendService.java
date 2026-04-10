@@ -30,32 +30,7 @@ public class RecommendService {
     // House -> RecommendHouse 변환
     private RecommendHouse toRecommendHouse(House house, double lat, double lon) {
 
-/*
-        // 1. 주소 문자열 만들기
-        String address;
-
-        if (house.getRegionDetail() == null || house.getRegionDetail().isBlank()) {
-            address = house.getRegionName();
-        } else {
-            address = house.getRegionName() + " " + house.getRegionDetail();
-        }
-
-        address = address.trim();
-
-        // 2. Tmap Api 호출 연결 및 좌표값 불러오기
-        Map result = tmapApiClient.getCoordinates(address);
-        double[] latlon = tmapApiClient.extractLatLon(result);
-
-        double lat = 0.0;
-        double lon = 0.0;
-
-        if (latlon != null) {
-            lat = latlon[0];
-            lon = latlon[1];
-        }
-*/
-
-        return RecommendHouse.builder()
+       return RecommendHouse.builder()
                 .house(house)
 
                 // 지금은 전부 기본값 (나중에 채움)
@@ -80,7 +55,7 @@ public class RecommendService {
         List<House> houses = houseRepository.findByRegionName(regionName);
 
         // 3. 캐시 성성
-        Map<String, double[]> cache = new HashMap<>();
+        Map<String, double[]> coordCache = new HashMap<>();
 
         // 3. 변환
         List<RecommendHouse> list = houses.stream()
@@ -99,13 +74,13 @@ public class RecommendService {
                     double[] latlon;
 
                     // 🔥 캐시 사용
-                    if (cache.containsKey(address)) {
-                        latlon = cache.get(address);
+                    if (coordCache.containsKey(address)) {
+                        latlon = coordCache.get(address);
                     } else {
                         Map result = tmapApiClient.getCoordinates(address);
                         latlon = tmapApiClient.extractLatLon(result);
 
-                        cache.put(address, latlon);
+                        coordCache.put(address, latlon);
                     }
 
                     double lat = 0.0;
