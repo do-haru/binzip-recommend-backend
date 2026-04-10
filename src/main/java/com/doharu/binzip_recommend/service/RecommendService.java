@@ -15,21 +15,53 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 @Service
-public class RecommendHouseService {
+public class RecommendService {
 
     private final HouseRepository houseRepository;
     private final RecommendHouseRepository recommendHouseRepository;
     private final TmapApiClient tmapApiClient;
 
-    public List<House> getAllHouses() {
-        return houseRepository.findAll();
-    }
 
-    public List<RecommendHouse> getAllRecommendHouses() {
+    // RecommendHouse 조회
+    public List<RecommendHouse> getRecommendHouses() {
         return recommendHouseRepository.findAll();
     }
 
-    public void generateRecommendHouse() {
+    // House -> RecommendHouse 변환
+    private RecommendHouse toRecommendHouse(House house) {
+
+        return RecommendHouse.builder()
+                .house(house)
+
+                // 지금은 전부 기본값 (나중에 채움)
+                .latitude(0.0)
+                .longitude(0.0)
+                .facilityCount(0)
+
+                .crowd(0.0)
+                .targetAgeRatio(0.0)
+
+                .price(0)
+//                .score(null)
+
+                .build();
+    }
+
+    public void generateRecommendHouse(String regionName) {
+        // 1. 기존 데이터 제거 (중복 방지)
+        recommendHouseRepository.deleteAll();
+
+        // 2. 원본 조회
+        List<House> houses = houseRepository.findByRegionName(regionName);
+
+        // 3. 변환
+        List<RecommendHouse> list = houses.stream()
+                .map(this::toRecommendHouse)
+                .toList();
+
+        // 4. 저장
+        recommendHouseRepository.saveAll(list);
+        /*
         List<House> houses = houseRepository.findAll();
 
         Map<String, double[]> cache = new HashMap<>();
@@ -61,13 +93,22 @@ public class RecommendHouseService {
                             .latitude(latlon[0])
                             .longitude(latlon[1])
                             .price(1000)     // 임시
-                            .score(0.0)      // 임시
+//                            .score(0.0)      // 임시
                             .build();
                 })
                 .toList();
 
         // 저장
         recommendHouseRepository.saveAll(list);
+*/
+    }
+
+    public List<House> getAllHouses() {
+        return houseRepository.findAll();
+    }
+
+    public List<RecommendHouse> getAllRecommendHouses() {
+        return recommendHouseRepository.findAll();
     }
 
     public List<RecommendHouse> createRecommendByRegion(String regionName) {
@@ -119,7 +160,7 @@ public class RecommendHouseService {
                             .latitude(latlon[0])
                             .longitude(latlon[1])
                             .price(1000)   // 임시
-                            .score(0.0)    // 임시
+//                            .score(0.0)    // 임시
                             .build();
                 })
                 .toList();
@@ -143,7 +184,7 @@ public class RecommendHouseService {
 
                         // RecommendHouse (가공)
                         .price(r.getPrice())
-                        .score(r.getScore())
+//                        .score(r.getScore())
 
                         // 추천 이유 (임시)
                         .reason(generateReason(r))

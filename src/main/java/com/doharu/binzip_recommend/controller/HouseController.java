@@ -8,7 +8,7 @@ import com.doharu.binzip_recommend.dto.RecommendHouseResponse;
 import com.doharu.binzip_recommend.repository.HouseRepository;
 import com.doharu.binzip_recommend.repository.RegionDetailMetaRepository;
 import com.doharu.binzip_recommend.service.QueryParserService;
-import com.doharu.binzip_recommend.service.RecommendHouseService;
+import com.doharu.binzip_recommend.service.RecommendService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,13 +22,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class HouseController {
 
-    private final RecommendHouseService recommendService;
+    private final RecommendService recommendService;
     private final QueryParserService queryParserService;
     private final RegionDetailMetaRepository regionDetailMetaRepository;
     private final HouseRepository houseRepository;
 
     @GetMapping("/test1")
-    public List<House> recommendTest(
+    public List<RecommendHouse> recommendTest(
             @RequestParam String regionName,
             @RequestParam String query
     ) {
@@ -39,7 +39,10 @@ public class HouseController {
         System.out.println("parse = " + parse);
 
 
-        return houseRepository.findByRegionName(regionName);
+//        return houseRepository.findByRegionName(regionName);
+
+        recommendService.generateRecommendHouse(regionName);
+        return recommendService.getRecommendHouses();
     }
 
     @GetMapping
@@ -47,11 +50,11 @@ public class HouseController {
         return recommendService.getAllHouses();
     }
 
-    @GetMapping("/recommend")
-    public List<RecommendHouse> getRecommendHouses() {
-        recommendService.generateRecommendHouse();
-        return recommendService.getAllRecommendHouses();
-    }
+//    @GetMapping("/recommend")
+//    public List<RecommendHouse> getRecommendHouses() {
+//        recommendService.generateRecommendHouse();
+//        return recommendService.getAllRecommendHouses();
+//    }
 
     @GetMapping("/test-recommend")
     public List<RecommendHouse> test(@RequestParam String regionName) {
