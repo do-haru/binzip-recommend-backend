@@ -34,5 +34,5 @@ public class RecommendHouse {
 
     private int price;          // 해당 빈집의 가격
 
-//    private Double score;
+    private Double score;
 }

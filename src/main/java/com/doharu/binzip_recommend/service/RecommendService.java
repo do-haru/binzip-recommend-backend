@@ -1,6 +1,7 @@
 package com.doharu.binzip_recommend.service;
 
 import com.doharu.binzip_recommend.domain.House;
+import com.doharu.binzip_recommend.domain.Level;
 import com.doharu.binzip_recommend.domain.Purpose;
 import com.doharu.binzip_recommend.domain.RecommendHouse;
 import com.doharu.binzip_recommend.dto.RecommendHouseResponse;
@@ -115,7 +116,20 @@ public class RecommendService {
                         lon = latlon[1];
                     }
 
-                    return toRecommendHouse(house, lat, lon);
+                    RecommendHouse r = toRecommendHouse(house, lat, lon);
+
+                    double score = calculateFinalScore(
+                            r,
+                            Purpose.CAFE,        // 일단 고정 테스트
+                            Level.HIGH,          // 임시
+                            Level.LOW,
+                            Level.LOW,
+                            Level.HIGH,
+                            Level.MID
+                    );
+                    r.setScore(score);
+
+                    return r;
                 })
                 .toList();
 
@@ -139,6 +153,81 @@ public class RecommendService {
 
             default -> new Weight(0.20, 0.20, 0.20, 0.20, 0.20, "20s");
         };
+    }
+
+    public double getScoreByLevel(double value, Level level) {
+
+        return switch (level) {
+
+            case HIGH -> value; // 클수록 좋음
+
+            case LOW -> 1 - value; // 작을수록 좋음
+
+            case MID -> 1 - Math.abs(value - 0.5); // 중간값이 최고
+        };
+    }
+
+    private double calculateScore(RecommendHouse r, Weight w) {
+
+        double facilityScore = r.getFacilityCount() / 20.0; // 임시 기준
+        double crowdScore = r.getCrowd(); // 이미 0~1
+        double priceScore = 1 - (r.getPrice() / 1000.0); // 낮을수록 좋음
+        double conditionScore = r.getHouse().getGrade() / 5.0; // 1~5라고 가정
+        double areaScore = r.getHouse().getArea() / 100.0; // 임시 기준
+
+        // 🔥 age 점수
+        double ageScore = 0.0;
+
+        switch (w.targetAge) {
+            case "10s" -> ageScore = r.getAge10();
+            case "20s" -> ageScore = r.getAge20();
+            case "30s" -> ageScore = r.getAge30();
+            case "40s" -> ageScore = r.getAge40();
+        }
+
+        return
+                facilityScore * w.facility +
+                        crowdScore * w.crowd +
+                        priceScore * w.price +
+                        conditionScore * w.condition +
+                        areaScore * w.area +
+                        ageScore * 0.2; // 🔥 age는 일단 0.2 고정
+    }
+
+    private double calculateFinalScore(RecommendHouse r, Purpose purpose,
+                                       Level crowdLevel,
+                                       Level priceLevel,
+                                       Level areaLevel,
+                                       Level facilityLevel,
+                                       Level conditionLevel) {
+
+        // 1. 가중치 가져오기
+        Weight w = getWeight(purpose);
+
+        // 2. 각 값 정규화 (0~1 맞추기)
+        double crowd = r.getCrowd(); // 이미 0~1
+        double price = r.getPrice() / 1000.0;
+        double area = r.getHouse().getArea() / 100.0;
+        double facility = r.getFacilityCount() / 20.0;
+        double condition = r.getHouse().getGrade() / 5.0;
+
+        // 3. Level 적용 → 부분 점수
+        double crowdScore = getScoreByLevel(crowd, crowdLevel);
+        double priceScore = getScoreByLevel(price, priceLevel);
+        double areaScore = getScoreByLevel(area, areaLevel);
+        double facilityScore = getScoreByLevel(facility, facilityLevel);
+        double conditionScore = getScoreByLevel(condition, conditionLevel);
+
+        // 4. 가중치 적용 + 합산
+        double total =
+                crowdScore * w.crowd +
+                        priceScore * w.price +
+                        areaScore * w.area +
+                        facilityScore * w.facility +
+                        conditionScore * w.condition;
+
+        // 5. 100점 변환
+        return Math.round(total * 100);
     }
 
     public List<House> getAllHouses() {
