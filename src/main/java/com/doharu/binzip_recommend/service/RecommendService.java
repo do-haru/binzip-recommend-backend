@@ -1,6 +1,7 @@
 package com.doharu.binzip_recommend.service;
 
 import com.doharu.binzip_recommend.domain.House;
+import com.doharu.binzip_recommend.domain.Purpose;
 import com.doharu.binzip_recommend.domain.RecommendHouse;
 import com.doharu.binzip_recommend.dto.RecommendHouseResponse;
 import com.doharu.binzip_recommend.external.TmapApiClient;
@@ -120,6 +121,24 @@ public class RecommendService {
 
         // 4. 저장
         recommendHouseRepository.saveAll(list);
+    }
+
+    public Weight getWeight(Purpose purpose) {
+
+        return switch (purpose) {
+
+            case CAFE -> new Weight(0.35, 0.30, 0.15, 0.10, 0.10, "20s");
+
+            case RESTAURANT -> new Weight(0.40, 0.30, 0.15, 0.05, 0.10, "30s");
+
+            case STUDIO -> new Weight(0.10, 0.10, 0.20, 0.30, 0.30, "30s");
+
+            case OFFICE -> new Weight(0.20, 0.20, 0.25, 0.20, 0.15, "30s");
+
+            case VACATION -> new Weight(0.05, 0.10, 0.25, 0.35, 0.25, "40s");
+
+            default -> new Weight(0.20, 0.20, 0.20, 0.20, 0.20, "20s");
+        };
     }
 
     public List<House> getAllHouses() {
