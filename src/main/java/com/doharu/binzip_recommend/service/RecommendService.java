@@ -30,18 +30,41 @@ public class RecommendService {
     // House -> RecommendHouse 변환
     private RecommendHouse toRecommendHouse(House house, double lat, double lon) {
 
+        int facilityCount = (int)(Math.random() * 20);
+        double crowd = Math.round(Math.random() * 100) / 100.0;
+        int price = (int)(Math.random() * 1000);
+
+        // ageRatio 임시 값
+        double a = Math.random();
+        double b = Math.random();
+        double c = Math.random();
+        double d = Math.random();
+        double e = Math.random();
+
+        double sum = a + b + c + d + e;
+
+        double age10 = Math.round((a / sum) * 100) / 100.0;
+        double age20 = Math.round((b / sum) * 100) / 100.0;
+        double age30 = Math.round((c / sum) * 100) / 100.0;
+        double age40 = Math.round((d / sum) * 100) / 100.0;
+        double ageEtc = Math.round((e / sum) * 100) / 100.0;
+
        return RecommendHouse.builder()
                 .house(house)
 
-                // 지금은 전부 기본값 (나중에 채움)
+                // 지금은 전부 임시값 (나중에 채움)
                 .latitude(lat)
                 .longitude(lon)
-                .facilityCount(0)
+                .facilityCount(facilityCount)
 
-                .crowd(0.0)
-                .targetAgeRatio(0.0)
+                .crowd(crowd)
+               .age10(age10)
+               .age20(age20)
+               .age30(age30)
+               .age40(age40)
+               .ageEtc(ageEtc)
 
-                .price(0)
+                .price(price)
 //                .score(null)
 
                 .build();
