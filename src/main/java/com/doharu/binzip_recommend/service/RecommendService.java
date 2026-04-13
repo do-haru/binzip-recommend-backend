@@ -11,6 +11,7 @@ import com.doharu.binzip_recommend.repository.RecommendHouseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -131,6 +132,7 @@ public class RecommendService {
 
                     return r;
                 })
+                .sorted(Comparator.comparing(RecommendHouse::getScore).reversed())
                 .toList();
 
         // 4. 저장
