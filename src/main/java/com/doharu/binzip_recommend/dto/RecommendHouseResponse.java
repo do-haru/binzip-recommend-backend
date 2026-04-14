@@ -23,6 +23,8 @@ public class RecommendHouseResponse {
     // RecommendHouse (가공 데이터)
     private Integer price;
     private Double score;
+    private double latitude;
+    private double longitude;
 
     // 추천 설명
     private String reason;

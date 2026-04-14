@@ -168,34 +168,6 @@ public class RecommendService {
             case MID -> 1 - Math.abs(value - 0.5); // 중간값이 최고
         };
     }
-
-    private double calculateScore(RecommendHouse r, Weight w) {
-
-        double facilityScore = r.getFacilityCount() / 20.0; // 임시 기준
-        double crowdScore = r.getCrowd(); // 이미 0~1
-        double priceScore = 1 - (r.getPrice() / 1000.0); // 낮을수록 좋음
-        double conditionScore = r.getHouse().getGrade() / 5.0; // 1~5라고 가정
-        double areaScore = r.getHouse().getArea() / 100.0; // 임시 기준
-
-        // 🔥 age 점수
-        double ageScore = 0.0;
-
-        switch (w.targetAge) {
-            case "10s" -> ageScore = r.getAge10();
-            case "20s" -> ageScore = r.getAge20();
-            case "30s" -> ageScore = r.getAge30();
-            case "40s" -> ageScore = r.getAge40();
-        }
-
-        return
-                facilityScore * w.facility +
-                        crowdScore * w.crowd +
-                        priceScore * w.price +
-                        conditionScore * w.condition +
-                        areaScore * w.area +
-                        ageScore * 0.2; // 🔥 age는 일단 0.2 고정
-    }
-
     private double calculateFinalScore(RecommendHouse r, Purpose purpose,
                                        Level crowdLevel,
                                        Level priceLevel,
@@ -258,7 +230,7 @@ public class RecommendService {
 
                         // RecommendHouse (가공)
                         .price(r.getPrice())
-//                        .score(r.getScore())
+                        .score(r.getScore())
 
                         // 추천 이유 (임시)
                         .reason(generateReason(r))
