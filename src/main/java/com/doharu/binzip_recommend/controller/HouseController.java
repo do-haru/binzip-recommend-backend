@@ -46,15 +46,8 @@ public class HouseController {
         QueryCondition parse = queryParserService.parse(query);
         System.out.println("parse = " + parse);
 
-
-        recommendService.toRecommendHouse();
-
         return recommendHouseRepository.findAll().stream()
                 .filter(h -> regions.contains(h.getRegionName()))
                 .toList();
-//        return houseRepository.findByRegionName(regionName);
-
-//        recommendService.generateRecommendHouse(regionName);
-//        return recommendService.getRecommendHouses();
     }
 }
