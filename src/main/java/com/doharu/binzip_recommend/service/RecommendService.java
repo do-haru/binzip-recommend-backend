@@ -23,6 +23,7 @@ public class RecommendService {
     private final HouseRepository houseRepository;
     private final RecommendHouseRepository recommendHouseRepository;
     private final TmapApiClient tmapApiClient;
+    private final CsvService csvService;
 
 
     // RecommendHouse 조회
@@ -30,49 +31,57 @@ public class RecommendService {
         return recommendHouseRepository.findAll();
     }
 
-    // House -> RecommendHouse 변환
-    private RecommendHouse toRecommendHouse(House house, double lat, double lon) {
+    // House, BackData -> RecommendHouse 변환
+    public void toRecommendHouse() {
 
-        int facilityCount = (int)(Math.random() * 20);
-        double crowd = Math.round(Math.random() * 100) / 100.0;
-        int price = (int)(Math.random() * 1000);
+        List<House> houses = houseRepository.findAll();
+        List<BackData> backDataList = csvService.readCsv();
 
-        // ageRatio 임시 값
-        double a = Math.random();
-        double b = Math.random();
-        double c = Math.random();
-        double d = Math.random();
-        double e = Math.random();
+        if (houses.size() != backDataList.size()) {
+            throw new RuntimeException("House와 CSV 개수 다름");
+        }
+        for (int i = 0; i < houses.size(); i++) {
 
-        double sum = a + b + c + d + e;
+            House house = houses.get(i);
+            BackData data = backDataList.get(i);
 
-        double age10 = Math.round((a / sum) * 100) / 100.0;
-        double age20 = Math.round((b / sum) * 100) / 100.0;
-        double age30 = Math.round((c / sum) * 100) / 100.0;
-        double age40 = Math.round((d / sum) * 100) / 100.0;
-        double ageEtc = Math.round((e / sum) * 100) / 100.0;
+            RecommendHouse rh = RecommendHouse.builder()
+                    // House 정보
+                    .regionName(house.getRegionName())
+                    .regionDetail(house.getRegionDetail())
+                    .area(house.getArea())
+                    .houseType(house.getHouseType())
+                    .grade(house.getGrade())
+                    .manager(house.getManager())
+                    .phone(house.getPhone())
+                    .updateDate(house.getUpdateDate())
 
-       return RecommendHouse.builder()
-                .house(house)
+                    // BackData 정보
+                    .latitude(data.getLatitude())
+                    .longitude(data.getLongitude())
+                    .facilityCount(data.getFacilityCount())
+                    .crowd(data.getCrowd())
 
-                // 지금은 전부 임시값 (나중에 채움)
-                .latitude(lat)
-                .longitude(lon)
-                .facilityCount(facilityCount)
+                    .age20(data.getAge20())
+                    .age30(data.getAge30())
+                    .age40(data.getAge40())
+                    .age50(data.getAge50())
+                    .age60(data.getAge60())
+                    .ageEtc(data.getAgeEtc())
 
-                .crowd(crowd)
-               .age10(age10)
-               .age20(age20)
-               .age30(age30)
-               .age40(age40)
-               .ageEtc(ageEtc)
+                    .price(data.getPrice())
 
-                .price(price)
-//                .score(null)
+                    // 초기값
+                    .score(0.0)
 
-                .build();
+                    .build();
+
+            recommendHouseRepository.save(rh);
+        }
     }
 
+
+/*
     public void generateRecommendHouse(String regionName) {
         // 1. 기존 데이터 제거 (중복 방지)
         recommendHouseRepository.deleteAll();
@@ -138,7 +147,7 @@ public class RecommendService {
         // 4. 저장
         recommendHouseRepository.saveAll(list);
     }
-
+*/
     public Weight getWeight(Purpose purpose) {
 
         return switch (purpose) {
@@ -168,6 +177,7 @@ public class RecommendService {
             case MID -> 1 - Math.abs(value - 0.5); // 중간값이 최고
         };
     }
+    /*
     private double calculateFinalScore(RecommendHouse r, Purpose purpose,
                                        Level crowdLevel,
                                        Level priceLevel,
@@ -203,7 +213,7 @@ public class RecommendService {
         // 5. 100점 변환
         return Math.round(total * 100);
     }
-
+*/
     public List<House> getAllHouses() {
         return houseRepository.findAll();
     }
@@ -211,7 +221,7 @@ public class RecommendService {
     public List<RecommendHouse> getAllRecommendHouses() {
         return recommendHouseRepository.findAll();
     }
-
+/*
     public List<RecommendHouseResponse> getRecommendResponse() {
 
         return recommendHouseRepository.findAll()
@@ -238,7 +248,7 @@ public class RecommendService {
                         .build())
                 .toList();
     }
-
+*/
     private String generateReason(RecommendHouse r) {
 
         // 지금은 임시 로직

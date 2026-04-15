@@ -6,7 +6,9 @@ import com.doharu.binzip_recommend.domain.RecommendHouse;
 import com.doharu.binzip_recommend.dto.QueryCondition;
 import com.doharu.binzip_recommend.dto.RecommendHouseResponse;
 import com.doharu.binzip_recommend.repository.HouseRepository;
+import com.doharu.binzip_recommend.repository.RecommendHouseRepository;
 import com.doharu.binzip_recommend.repository.RegionDetailMetaRepository;
+import com.doharu.binzip_recommend.service.CsvService;
 import com.doharu.binzip_recommend.service.QueryParserService;
 import com.doharu.binzip_recommend.service.RecommendService;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,8 @@ public class HouseController {
     private final QueryParserService queryParserService;
     private final RegionDetailMetaRepository regionDetailMetaRepository;
     private final HouseRepository houseRepository;
+    private final CsvService csvService;
+    private final RecommendHouseRepository recommendHouseRepository;
 
     @GetMapping("/test1")
     public List<RecommendHouse> recommendTest(
@@ -39,40 +43,11 @@ public class HouseController {
         System.out.println("parse = " + parse);
 
 
+        recommendService.toRecommendHouse();
+        return recommendHouseRepository.findAll();
 //        return houseRepository.findByRegionName(regionName);
 
-        recommendService.generateRecommendHouse(regionName);
-        return recommendService.getRecommendHouses();
-    }
-
-    @GetMapping
-    public List<House> getHouses() {
-        return recommendService.getAllHouses();
-    }
-
-//    @GetMapping("/recommend")
-//    public List<RecommendHouse> getRecommendHouses() {
-//        recommendService.generateRecommendHouse();
-//        return recommendService.getAllRecommendHouses();
-//    }
-
-//    @GetMapping("/test-recommend")
-//    public List<RecommendHouse> test(@RequestParam String regionName) {
-//        return recommendService.createRecommendByRegion(regionName);
-//    }
-
-    @GetMapping("/recommend-dto")
-    public List<RecommendHouseResponse> getRecommendHousesDto() {
-        return recommendService.getRecommendResponse();
-    }
-
-    @GetMapping("/region-meta")
-    public List<RegionDetailMeta> getRegionMeta() {
-        return regionDetailMetaRepository.findAll();
-    }
-
-    @GetMapping("/test-region")
-    public List<House> testRegion(@RequestParam String regionName) {
-        return houseRepository.findByRegionName(regionName);
+//        recommendService.generateRecommendHouse(regionName);
+//        return recommendService.getRecommendHouses();
     }
 }
