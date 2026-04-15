@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -36,6 +37,9 @@ public class HouseController {
             @RequestParam String regionName,
             @RequestParam String query
     ) {
+
+        List<String> regions = Arrays.asList(regionName.split(","));
+
         System.out.println("regionName = " + regionName);
         System.out.println("query = " + query);
 
@@ -44,7 +48,10 @@ public class HouseController {
 
 
         recommendService.toRecommendHouse();
-        return recommendHouseRepository.findAll();
+
+        return recommendHouseRepository.findAll().stream()
+                .filter(h -> regions.contains(h.getRegionName()))
+                .toList();
 //        return houseRepository.findByRegionName(regionName);
 
 //        recommendService.generateRecommendHouse(regionName);
