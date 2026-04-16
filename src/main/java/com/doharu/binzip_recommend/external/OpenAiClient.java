@@ -71,4 +71,55 @@ public class OpenAiClient {
 
         return content;
     }
+
+    public String generateReasonText(List<String> reasons) {
+
+        if (reasons == null || reasons.isEmpty()) {
+            return "적합한 조건을 갖춘 위치입니다.";
+        }
+
+        String keywordText = String.join(", ", reasons);
+
+        String prompt = """
+다음 키워드를 바탕으로 자연스럽고 간결한 추천 이유 한 문장을 만들어라.
+
+조건:
+- 반드시 한 문장으로 작성
+- 불필요한 설명 금지
+- "~한 위치입니다" 형태로 끝낼 것
+
+키워드:
+""" + keywordText;
+
+        // 🔥 기존 call() 재사용
+        return callForReason(prompt);
+    }
+
+    public String callForReason(String prompt) {
+
+        String url = "https://api.openai.com/v1/chat/completions";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey);
+
+        Map<String, Object> body = Map.of(
+                "model", "gpt-4.1-mini",
+                "messages", new Object[]{
+                        Map.of("role", "system", "content",
+                                "너는 추천 이유를 자연스럽게 문장으로 만들어주는 역할이다."),
+                        Map.of("role", "user", "content", prompt)
+                }
+        );
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+        Map response = restTemplate.postForObject(url, request, Map.class);
+
+        List<Map> choices = (List<Map>) response.get("choices");
+        Map firstChoice = choices.get(0);
+        Map message = (Map) firstChoice.get("message");
+
+        return (String) message.get("content");
+    }
 }

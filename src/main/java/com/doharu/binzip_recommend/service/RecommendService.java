@@ -5,17 +5,15 @@ import com.doharu.binzip_recommend.domain.Level;
 import com.doharu.binzip_recommend.domain.Purpose;
 import com.doharu.binzip_recommend.domain.RecommendHouse;
 import com.doharu.binzip_recommend.dto.QueryCondition;
-import com.doharu.binzip_recommend.dto.RecommendHouseResponse;
+import com.doharu.binzip_recommend.dto.RecommendResultDto;
+import com.doharu.binzip_recommend.external.OpenAiClient;
 import com.doharu.binzip_recommend.external.TmapApiClient;
 import com.doharu.binzip_recommend.repository.HouseRepository;
 import com.doharu.binzip_recommend.repository.RecommendHouseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
@@ -25,6 +23,7 @@ public class RecommendService {
     private final RecommendHouseRepository recommendHouseRepository;
     private final TmapApiClient tmapApiClient;
     private final CsvService csvService;
+    private final OpenAiClient openAiClient;
 
 
     // RecommendHouse 조회
@@ -81,8 +80,10 @@ public class RecommendService {
         }
     }
 
-    public List<RecommendHouse> filterByRegion(List<String> regions, QueryCondition condition) {
-        List<RecommendHouse> result = recommendHouseRepository.findAll().stream()
+    public List<RecommendResultDto> filterByRegion(List<String> regions, QueryCondition condition) {
+        Map<String, String> reasonCache = new HashMap<>();
+
+        List<RecommendResultDto> result = recommendHouseRepository.findAll().stream()
                 .filter(h -> regions.contains(h.getRegionName()))
                 .filter(h -> isTargetAgeMatched(h, condition))
                 .filter(h -> isCrowdMatched(h, condition))
@@ -97,10 +98,30 @@ public class RecommendService {
                 })
                 .sorted(Comparator.comparing(RecommendHouse::getScore).reversed())
                 .limit(20)
+                .map(h -> {
+                    List<String> reasons = extractReasons(h, condition);
+
+                    String key = String.join(",", reasons);
+
+                    String reasonText;
+
+                    if (reasonCache.containsKey(key)) {
+                        reasonText = reasonCache.get(key);
+                    } else {
+                        reasonText = openAiClient.generateReasonText(reasons);
+                        reasonCache.put(key, reasonText);
+                    }
+
+                    return RecommendResultDto.builder()
+                            .house(h)
+                            .reasons(reasons)
+                            .reasonText(reasonText)
+                            .build();
+                })
                 .toList();
 
         System.out.println("===== 필터 결과 =====");
-        for (RecommendHouse h : result) {
+        for (RecommendResultDto h : result) {
             System.out.println(h);
         }
 
@@ -388,43 +409,50 @@ public class RecommendService {
             case MID -> 1 - Math.abs(value - 0.5); // 중간값이 최고
         };
     }
-    /*
-    private double calculateFinalScore(RecommendHouse r, Purpose purpose,
-                                       Level crowdLevel,
-                                       Level priceLevel,
-                                       Level areaLevel,
-                                       Level facilityLevel,
-                                       Level conditionLevel) {
 
-        // 1. 가중치 가져오기
-        Weight w = getWeight(purpose);
+    private List<String> extractReasons(RecommendHouse h, QueryCondition condition) {
 
-        // 2. 각 값 정규화 (0~1 맞추기)
-        double crowd = r.getCrowd(); // 이미 0~1
-        double price = r.getPrice() / 1000.0;
-        double area = r.getHouse().getArea() / 100.0;
-        double facility = r.getFacilityCount() / 20.0;
-        double condition = r.getHouse().getGrade() / 5.0;
+        List<String> reasons = new ArrayList<>();
 
-        // 3. Level 적용 → 부분 점수
-        double crowdScore = getScoreByLevel(crowd, crowdLevel);
-        double priceScore = getScoreByLevel(price, priceLevel);
-        double areaScore = getScoreByLevel(area, areaLevel);
-        double facilityScore = getScoreByLevel(facility, facilityLevel);
-        double conditionScore = getScoreByLevel(condition, conditionLevel);
+        // 1. 값 정규화 (calculateScore랑 동일)
+        double crowd = h.getCrowd() / 100.0;
+        double price = h.getPrice() / 20000.0;
+        double area = Math.min(h.getArea() / 100.0, 1);
+        double facility = h.getFacilityCount() / 10.0;
+        double cond = (5 - h.getGrade()) / 4.0;
 
-        // 4. 가중치 적용 + 합산
-        double total =
-                crowdScore * w.crowd +
-                        priceScore * w.price +
-                        areaScore * w.area +
-                        facilityScore * w.facility +
-                        conditionScore * w.condition;
+        // 2. Level 적용 (null → MID)
+        double crowdScore = getScoreByLevel(crowd, toLevel(condition.getCrowdLevel()));
+        double priceScore = getScoreByLevel(price, toLevel(condition.getPriceLevel()));
+        double areaScore = getScoreByLevel(area, toLevel(condition.getAreaLevel()));
+        double facilityScore = getScoreByLevel(facility, toLevel(condition.getFacilityLevel()));
+        double condScore = getScoreByLevel(cond, toLevel(condition.getConditionLevel()));
 
-        // 5. 100점 변환
-        return Math.round(total * 100);
+        // 3. 기준: 0.7 이상만 이유로 채택
+
+        if (crowdScore >= 0.7) {
+            reasons.add("유동인구 많음");
+        }
+
+        if (facilityScore >= 0.7) {
+            reasons.add("시설 풍부");
+        }
+
+        if (areaScore >= 0.7) {
+            reasons.add("면적 넓음");
+        }
+
+        if (priceScore >= 0.7) {
+            reasons.add("가격 적절");
+        }
+
+        if (condScore >= 0.7) {
+            reasons.add("상태 좋음");
+        }
+
+        return reasons;
     }
-*/
+
     public List<House> getAllHouses() {
         return houseRepository.findAll();
     }
@@ -432,34 +460,7 @@ public class RecommendService {
     public List<RecommendHouse> getAllRecommendHouses() {
         return recommendHouseRepository.findAll();
     }
-/*
-    public List<RecommendHouseResponse> getRecommendResponse() {
 
-        return recommendHouseRepository.findAll()
-                .stream()
-                .map(r -> RecommendHouseResponse.builder()
-
-                        // House (원본)
-                        .houseId(r.getHouse().getId())
-                        .regionName(r.getHouse().getRegionName())
-                        .regionDetail(r.getHouse().getRegionDetail())
-                        .area(r.getHouse().getArea())
-                        .houseType(r.getHouse().getHouseType())
-                        .grade(r.getHouse().getGrade())
-                        .manager(r.getHouse().getManager())
-                        .phone(r.getHouse().getPhone())
-
-                        // RecommendHouse (가공)
-                        .price(r.getPrice())
-                        .score(r.getScore())
-
-                        // 추천 이유 (임시)
-                        .reason(generateReason(r))
-
-                        .build())
-                .toList();
-    }
-*/
     private String generateReason(RecommendHouse r) {
 
         // 지금은 임시 로직
