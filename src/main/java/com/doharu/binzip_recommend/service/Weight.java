@@ -1,5 +1,8 @@
 package com.doharu.binzip_recommend.service;
 
+import lombok.Getter;
+
+@Getter
 public class Weight {
 
     public double crowd;

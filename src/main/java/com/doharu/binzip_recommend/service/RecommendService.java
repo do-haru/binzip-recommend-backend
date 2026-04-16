@@ -90,6 +90,13 @@ public class RecommendService {
                 .filter(h -> isFacilityMatched(h, condition))
                 .filter(h -> isConditionMatched(h, condition))
                 .filter(h -> isPriceMatched(h, condition))
+                .map(h -> {
+                    double score = calculateScore(h, condition);
+                    h.setScore(score);
+                    return h;
+                })
+                .sorted(Comparator.comparing(RecommendHouse::getScore).reversed())
+                .limit(20)
                 .toList();
 
         System.out.println("===== 필터 결과 =====");
@@ -230,6 +237,59 @@ public class RecommendService {
         }
 
         return true;
+    }
+
+    private Level toLevel(String value) {
+        if (value == null || value.equals("null")) {
+            return Level.MID; // 기본값
+        }
+
+        return switch (value) {
+            case "HIGH" -> Level.HIGH;
+            case "LOW" -> Level.LOW;
+            default -> Level.MID;
+        };
+    }
+
+    private double calculateScore(RecommendHouse h, QueryCondition condition) {
+
+        // 1. purpose → weight
+        Purpose purpose = condition.getPurpose() == null
+                ? Purpose.CAFE
+                : Purpose.valueOf(condition.getPurpose());
+
+        Weight w = getWeight(purpose);
+
+        // 2. 값 정규화
+        double crowd = h.getCrowd() / 100.0;
+        double price = h.getPrice() / 20000.0;
+        double area = Math.min(h.getArea() / 100.0, 1);
+        double facility = h.getFacilityCount() / 10.0;
+        double cond = (5 - h.getGrade()) / 4.0;
+
+        // 3. Level 변환 (null → MID)
+        Level crowdLevel = toLevel(condition.getCrowdLevel());
+        Level priceLevel = toLevel(condition.getPriceLevel());
+        Level areaLevel = toLevel(condition.getAreaLevel());
+        Level facilityLevel = toLevel(condition.getFacilityLevel());
+        Level condLevel = toLevel(condition.getConditionLevel());
+
+        // 4. 각 점수 계산
+        double crowdScore = getScoreByLevel(crowd, crowdLevel);
+        double priceScore = getScoreByLevel(price, priceLevel);
+        double areaScore = getScoreByLevel(area, areaLevel);
+        double facilityScore = getScoreByLevel(facility, facilityLevel);
+        double condScore = getScoreByLevel(cond, condLevel);
+
+        // 5. 가중합
+        double total =
+                crowdScore * w.getCrowd() +
+                        priceScore * w.getPrice() +
+                        areaScore * w.getArea() +
+                        facilityScore * w.getFacility() +
+                        condScore * w.getCondition();
+
+        return Math.round(total * 100);
     }
 
 /*
