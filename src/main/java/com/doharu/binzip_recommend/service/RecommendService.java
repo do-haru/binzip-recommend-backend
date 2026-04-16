@@ -4,6 +4,7 @@ import com.doharu.binzip_recommend.domain.House;
 import com.doharu.binzip_recommend.domain.Level;
 import com.doharu.binzip_recommend.domain.Purpose;
 import com.doharu.binzip_recommend.domain.RecommendHouse;
+import com.doharu.binzip_recommend.dto.QueryCondition;
 import com.doharu.binzip_recommend.dto.RecommendHouseResponse;
 import com.doharu.binzip_recommend.external.TmapApiClient;
 import com.doharu.binzip_recommend.repository.HouseRepository;
@@ -80,12 +81,42 @@ public class RecommendService {
         }
     }
 
-    public List<RecommendHouse> filterByRegion(List<String> regions) {
+    public List<RecommendHouse> filterByRegion(List<String> regions, QueryCondition condition) {
         return recommendHouseRepository.findAll().stream()
                 .filter(h -> regions.contains(h.getRegionName()))
+                .filter(h -> isTargetAgeMatched(h, condition))
                 .toList();
     }
 
+    // 나이 필터 함수
+    private boolean isTargetAgeMatched(RecommendHouse h, QueryCondition condition) {
+
+        if (condition.getTargetAges() == null || condition.getTargetAges().isEmpty()) {
+            return true;
+        }
+
+        for (String age : condition.getTargetAges()) {
+            switch (age) {
+                case "20":
+                    if (h.getAge20() >= 15) return true;
+                    break;
+                case "30":
+                    if (h.getAge30() >= 15) return true;
+                    break;
+                case "40":
+                    if (h.getAge40() >= 15) return true;
+                    break;
+                case "50":
+                    if (h.getAge50() >= 15) return true;
+                    break;
+                case "60":
+                    if (h.getAge60() >= 15) return true;
+                    break;
+            }
+        }
+
+        return false;
+    }
 
 /*
     public void generateRecommendHouse(String regionName) {

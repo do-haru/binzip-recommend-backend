@@ -44,7 +44,7 @@ public class HouseController {
         QueryCondition parse = queryParserService.parse(query);
         System.out.println("parse = " + parse);
 
-        return recommendService.filterByRegion(regions);
+        return recommendService.filterByRegion(regions, parse);
     }
 
     @GetMapping("/recommend")
