@@ -85,6 +85,7 @@ public class RecommendService {
         return recommendHouseRepository.findAll().stream()
                 .filter(h -> regions.contains(h.getRegionName()))
                 .filter(h -> isTargetAgeMatched(h, condition))
+                .filter(h -> isCrowdMatched(h, condition))
                 .toList();
     }
 
@@ -116,6 +117,27 @@ public class RecommendService {
         }
 
         return false;
+    }
+
+    // 유동인구 필터 함수
+    private boolean isCrowdMatched(RecommendHouse h, QueryCondition condition) {
+
+        if (condition.getCrowdLevel() == null) {
+            return true;
+        }
+
+        double crowd = h.getCrowd();
+
+        switch (condition.getCrowdLevel()) {
+            case "HIGH":
+                return crowd > 50;
+            case "MEDIUM":
+                return crowd >= 20 && crowd <= 50;
+            case "LOW":
+                return crowd < 20;
+        }
+
+        return true;
     }
 
 /*
