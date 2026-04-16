@@ -49,4 +49,22 @@ public class RecommendHouse {
     private int price;          // 해당 빈집의 가격
 
     private Double score;
+
+    @Override
+    public String toString() {
+        return "RecommendHouse{" +
+                "region='" + regionName + '\'' +
+                ", age20=" + age20 +
+                ", age30=" + age30 +
+                ", age40=" + age40 +
+                ", age50=" + age50 +
+                ", age60=" + age60 +
+                ", ageEtc=" + ageEtc +
+                ", crowd=" + crowd +
+                ", area=" + area +
+                ", facility=" + facilityCount +
+                ", grade=" + grade +
+                ", price=" + price +
+                '}';
+    }
 }

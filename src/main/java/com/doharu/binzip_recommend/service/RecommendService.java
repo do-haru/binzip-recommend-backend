@@ -82,7 +82,7 @@ public class RecommendService {
     }
 
     public List<RecommendHouse> filterByRegion(List<String> regions, QueryCondition condition) {
-        return recommendHouseRepository.findAll().stream()
+        List<RecommendHouse> result = recommendHouseRepository.findAll().stream()
                 .filter(h -> regions.contains(h.getRegionName()))
                 .filter(h -> isTargetAgeMatched(h, condition))
                 .filter(h -> isCrowdMatched(h, condition))
@@ -91,6 +91,13 @@ public class RecommendService {
                 .filter(h -> isConditionMatched(h, condition))
                 .filter(h -> isPriceMatched(h, condition))
                 .toList();
+
+        System.out.println("===== 필터 결과 =====");
+        for (RecommendHouse h : result) {
+            System.out.println(h);
+        }
+
+        return result;
     }
 
     // 나이 필터 함수
@@ -194,12 +201,12 @@ public class RecommendService {
         int grade = h.getGrade();
 
         switch (condition.getConditionLevel()) {
-            case "LOW":
-                return grade >= 4;
-            case "MEDIUM":
-                return grade == 3;
             case "HIGH":
-                return grade <= 2;
+                return grade <= 2;      // 1,2
+            case "MEDIUM":
+                return grade == 3;      // 3
+            case "LOW":
+                return grade >= 4;      // 4,5
         }
 
         return true;
