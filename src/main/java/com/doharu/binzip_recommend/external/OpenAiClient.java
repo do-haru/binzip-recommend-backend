@@ -81,14 +81,13 @@ public class OpenAiClient {
         String keywordText = String.join(", ", reasons);
 
         String prompt = """
-다음 키워드를 바탕으로 자연스럽고 간결한 추천 이유 한 문장을 만들어라.
+너는 키워드를 자연스럽고 읽기 쉬운 한 문장으로 정리하는 전문가다.
 
-조건:
+규칙:
 - 반드시 한 문장으로 작성
-- 불필요한 설명 금지
+- 의미가 자연스럽게 이어지도록 재구성할 것
+- 단순 나열하지 말 것
 - "~한 위치입니다" 형태로 끝낼 것
-
-키워드:
 """ + keywordText;
 
         // 🔥 기존 call() 재사용
