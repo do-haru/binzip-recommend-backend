@@ -11,6 +11,7 @@ import com.doharu.binzip_recommend.repository.RegionDetailMetaRepository;
 import com.doharu.binzip_recommend.service.CsvService;
 import com.doharu.binzip_recommend.service.QueryParserService;
 import com.doharu.binzip_recommend.service.RecommendService;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,9 +28,6 @@ public class HouseController {
 
     private final RecommendService recommendService;
     private final QueryParserService queryParserService;
-    private final RegionDetailMetaRepository regionDetailMetaRepository;
-    private final HouseRepository houseRepository;
-    private final CsvService csvService;
     private final RecommendHouseRepository recommendHouseRepository;
 
     @GetMapping("/test1")
@@ -46,8 +44,11 @@ public class HouseController {
         QueryCondition parse = queryParserService.parse(query);
         System.out.println("parse = " + parse);
 
-        return recommendHouseRepository.findAll().stream()
-                .filter(h -> regions.contains(h.getRegionName()))
-                .toList();
+        return recommendService.filterByRegion(regions);
+    }
+
+    @GetMapping("/recommend")
+    public List<RecommendHouse> test2() {
+        return recommendService.getRecommendHouses();
     }
 }

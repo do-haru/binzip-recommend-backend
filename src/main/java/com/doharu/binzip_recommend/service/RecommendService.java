@@ -80,6 +80,12 @@ public class RecommendService {
         }
     }
 
+    public List<RecommendHouse> filterByRegion(List<String> regions) {
+        return recommendHouseRepository.findAll().stream()
+                .filter(h -> regions.contains(h.getRegionName()))
+                .toList();
+    }
+
 
 /*
     public void generateRecommendHouse(String regionName) {
