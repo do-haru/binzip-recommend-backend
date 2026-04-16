@@ -15,6 +15,7 @@ public class RecommendResultDto {
     private RecommendHouse house;
     private List<String> reasons;
     private String reasonText;
+    private List<EstateDto> estates;
 
     @Override
     public String toString() {
@@ -22,6 +23,7 @@ public class RecommendResultDto {
                 "house=" + house +
                 ", reasons=" + reasons +
                 ", reasonText='" + reasonText + '\'' +
+                ", estates=" + estates +
                 '}';
     }
 }

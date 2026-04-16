@@ -4,6 +4,7 @@ import com.doharu.binzip_recommend.domain.House;
 import com.doharu.binzip_recommend.domain.Level;
 import com.doharu.binzip_recommend.domain.Purpose;
 import com.doharu.binzip_recommend.domain.RecommendHouse;
+import com.doharu.binzip_recommend.dto.EstateDto;
 import com.doharu.binzip_recommend.dto.QueryCondition;
 import com.doharu.binzip_recommend.dto.RecommendResultDto;
 import com.doharu.binzip_recommend.external.OpenAiClient;
@@ -24,6 +25,7 @@ public class RecommendService {
     private final TmapApiClient tmapApiClient;
     private final CsvService csvService;
     private final OpenAiClient openAiClient;
+    private final EstateService estateService;
 
 
     // RecommendHouse 조회
@@ -100,6 +102,8 @@ public class RecommendService {
                 .limit(20)
                 .map(h -> {
                     List<String> reasons = extractReasons(h, condition);
+                    List<EstateDto> estates =
+                            estateService.getRandomEstates(h.getRegionName());
 
                     String key = String.join(",", reasons);
 
@@ -116,6 +120,7 @@ public class RecommendService {
                             .house(h)
                             .reasons(reasons)
                             .reasonText(reasonText)
+                            .estates(estates)
                             .build();
                 })
                 .toList();
