@@ -86,6 +86,10 @@ public class RecommendService {
                 .filter(h -> regions.contains(h.getRegionName()))
                 .filter(h -> isTargetAgeMatched(h, condition))
                 .filter(h -> isCrowdMatched(h, condition))
+                .filter(h -> isAreaMatched(h, condition))
+                .filter(h -> isFacilityMatched(h, condition))
+                .filter(h -> isConditionMatched(h, condition))
+                .filter(h -> isPriceMatched(h, condition))
                 .toList();
     }
 
@@ -122,7 +126,7 @@ public class RecommendService {
     // 유동인구 필터 함수
     private boolean isCrowdMatched(RecommendHouse h, QueryCondition condition) {
 
-        if (condition.getCrowdLevel() == null) {
+        if (condition.getCrowdLevel() == null || condition.getCrowdLevel().equals("null")) {
             return true;
         }
 
@@ -135,6 +139,87 @@ public class RecommendService {
                 return crowd >= 20 && crowd <= 50;
             case "LOW":
                 return crowd < 20;
+        }
+
+        return true;
+    }
+
+    // 빈집 면적 필터 함수
+    private boolean isAreaMatched(RecommendHouse h, QueryCondition condition) {
+
+        if (condition.getAreaLevel() == null || condition.getAreaLevel().equals("null")) {
+            return true;
+        }
+
+        double area = h.getArea();
+
+        switch (condition.getAreaLevel()) {
+            case "SMALL":
+                return area <= 50;
+            case "MEDIUM":
+                return area > 50 && area < 90;
+            case "LARGE":
+                return area >= 90;
+        }
+
+        return true;
+    }
+
+    private boolean isFacilityMatched(RecommendHouse h, QueryCondition condition) {
+
+        if (condition.getFacilityLevel() == null || condition.getFacilityLevel().equals("null")) {
+            return true;
+        }
+
+        int facility = h.getFacilityCount();
+
+        switch (condition.getFacilityLevel()) {
+            case "HIGH":
+                return facility >= 8;
+            case "MEDIUM":
+                return facility >= 4 && facility <= 7;
+            case "LOW":
+                return facility <= 3;
+        }
+
+        return true;
+    }
+
+    private boolean isConditionMatched(RecommendHouse h, QueryCondition condition) {
+
+        if (condition.getConditionLevel() == null || condition.getConditionLevel().equals("null")) {
+            return true;
+        }
+
+        int grade = h.getGrade();
+
+        switch (condition.getConditionLevel()) {
+            case "LOW":
+                return grade >= 4;
+            case "MEDIUM":
+                return grade == 3;
+            case "HIGH":
+                return grade <= 2;
+        }
+
+        return true;
+    }
+
+    private boolean isPriceMatched(RecommendHouse h, QueryCondition condition) {
+
+        if (condition.getPriceLevel() == null || condition.getPriceLevel().equals("null")) {
+            return true;
+        }
+
+        int price = h.getPrice();
+
+        switch (condition.getPriceLevel()) {
+            case "LOW":
+                return price <= 10000;
+            case "MEDIUM":
+                return price > 10000 && price < 15000;
+            case "HIGH":
+                return price >= 15000;
         }
 
         return true;
