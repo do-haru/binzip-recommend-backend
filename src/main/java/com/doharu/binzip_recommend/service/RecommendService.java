@@ -101,6 +101,22 @@ public class RecommendService {
                 .sorted(Comparator.comparing(RecommendHouse::getScore).reversed())
                 .limit(20)
                 .map(h -> {
+                    Map<String, double[]> coordCache = new HashMap<>();
+                    String address = "경상북도 영주시 " + h.getRegionName();
+
+                    if (h.getRegionDetail() != null && !h.getRegionDetail().isBlank()) {
+                        address += " " + h.getRegionDetail();
+                    }
+
+                    Map tmp = tmapApiClient.getCoordinates(address);
+                    double[] latlon = tmapApiClient.extractLatLon(tmp);
+
+                    if (latlon != null) {
+                        h.setLatitude(latlon[0]);
+                        h.setLongitude(latlon[1]);
+                    }
+
+
                     List<String> reasons = extractReasons(h, condition);
                     List<EstateDto> estates =
                             estateService.getRandomEstates(h.getRegionName());
@@ -318,73 +334,6 @@ public class RecommendService {
         return Math.round(total * 100);
     }
 
-/*
-    public void generateRecommendHouse(String regionName) {
-        // 1. 기존 데이터 제거 (중복 방지)
-        recommendHouseRepository.deleteAll();
-
-        // 2. House 조회
-        List<House> houses = houseRepository.findByRegionName(regionName);
-
-        // 3. 캐시 성성
-        Map<String, double[]> coordCache = new HashMap<>();
-
-        // 3. 변환
-        List<RecommendHouse> list = houses.stream()
-                .map(house -> {
-
-                    String address;
-
-                    if (house.getRegionDetail() == null || house.getRegionDetail().isBlank()) {
-                        address = house.getRegionName();
-                    } else {
-                        address = house.getRegionName() + " " + house.getRegionDetail();
-                    }
-
-                    address = address.trim();
-
-                    double[] latlon;
-
-                    // 🔥 캐시 사용
-                    if (coordCache.containsKey(address)) {
-                        latlon = coordCache.get(address);
-                    } else {
-                        Map result = tmapApiClient.getCoordinates(address);
-                        latlon = tmapApiClient.extractLatLon(result);
-
-                        coordCache.put(address, latlon);
-                    }
-
-                    double lat = 0.0;
-                    double lon = 0.0;
-
-                    if (latlon != null) {
-                        lat = latlon[0];
-                        lon = latlon[1];
-                    }
-
-                    RecommendHouse r = toRecommendHouse(house, lat, lon);
-
-                    double score = calculateFinalScore(
-                            r,
-                            Purpose.CAFE,        // 일단 고정 테스트
-                            Level.HIGH,          // 임시
-                            Level.LOW,
-                            Level.LOW,
-                            Level.HIGH,
-                            Level.MID
-                    );
-                    r.setScore(score);
-
-                    return r;
-                })
-                .sorted(Comparator.comparing(RecommendHouse::getScore).reversed())
-                .toList();
-
-        // 4. 저장
-        recommendHouseRepository.saveAll(list);
-    }
-*/
     public Weight getWeight(Purpose purpose) {
 
         return switch (purpose) {
