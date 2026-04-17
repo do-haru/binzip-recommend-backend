@@ -84,6 +84,7 @@ public class RecommendService {
 
     public List<RecommendResultDto> filterByRegion(List<String> regions, QueryCondition condition) {
         Map<String, String> reasonCache = new HashMap<>();
+        Map<String, double[]> coordCache = new HashMap<>();
 
         List<RecommendResultDto> result = recommendHouseRepository.findAll().stream()
                 .filter(h -> regions.contains(h.getRegionName()))
@@ -101,19 +102,29 @@ public class RecommendService {
                 .sorted(Comparator.comparing(RecommendHouse::getScore).reversed())
                 .limit(20)
                 .map(h -> {
-                    Map<String, double[]> coordCache = new HashMap<>();
+
                     String address = "경상북도 영주시 " + h.getRegionName();
 
                     if (h.getRegionDetail() != null && !h.getRegionDetail().isBlank()) {
                         address += " " + h.getRegionDetail();
                     }
 
-                    Map tmp = tmapApiClient.getCoordinates(address);
-                    double[] latlon = tmapApiClient.extractLatLon(tmp);
+                    double[] latlon;
+
+                    if (coordCache.containsKey(address)) {
+                        latlon = coordCache.get(address);
+                    } else {
+                        Map tmp = tmapApiClient.getCoordinates(address);
+                        latlon = tmapApiClient.extractLatLon(tmp);
+                        coordCache.put(address, latlon);
+                    }
 
                     if (latlon != null) {
-                        h.setLatitude(latlon[0]);
-                        h.setLongitude(latlon[1]);
+                        double latOffset = (Math.random() - 0.5) * 0.002;
+                        double lonOffset = (Math.random() - 0.5) * 0.002;
+
+                        h.setLatitude(latlon[0] + latOffset);
+                        h.setLongitude(latlon[1] + lonOffset);
                     }
 
 
@@ -190,9 +201,11 @@ public class RecommendService {
 
         switch (condition.getCrowdLevel()) {
             case "HIGH":
-                return crowd > 50;
+                return crowd >= 45;
+
             case "MEDIUM":
-                return crowd >= 20 && crowd <= 50;
+                return crowd >= 20 && crowd < 45;
+
             case "LOW":
                 return crowd < 20;
         }
@@ -231,11 +244,13 @@ public class RecommendService {
 
         switch (condition.getFacilityLevel()) {
             case "HIGH":
-                return facility >= 8;
+                return facility >= 18;
+
             case "MEDIUM":
-                return facility >= 4 && facility <= 7;
+                return facility >= 8 && facility < 18;
+
             case "LOW":
-                return facility <= 3;
+                return facility < 8;
         }
 
         return true;
@@ -272,8 +287,10 @@ public class RecommendService {
         switch (condition.getPriceLevel()) {
             case "LOW":
                 return price <= 10000;
+
             case "MEDIUM":
                 return price > 10000 && price < 15000;
+
             case "HIGH":
                 return price >= 15000;
         }
