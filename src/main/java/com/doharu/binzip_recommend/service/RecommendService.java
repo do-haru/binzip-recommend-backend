@@ -387,9 +387,9 @@ public class RecommendService {
 
         // 1. 값 정규화 (calculateScore랑 동일)
         double crowd = h.getCrowd() / 100.0;
-        double price = h.getPrice() / 20000.0;
+        double price = (h.getPrice() - 7000) / 20000.0;
         double area = Math.min(h.getArea() / 100.0, 1);
-        double facility = h.getFacilityCount() / 10.0;
+        double facility = h.getFacilityCount() / 30.0;
         double cond = (5 - h.getGrade()) / 4.0;
 
         // 2. Level 적용 (null → MID)
