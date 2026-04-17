@@ -413,7 +413,7 @@ public class RecommendService {
             reasons.add("면적 넓음");
         }
 
-        if (priceScore >= 0.7) {
+        if (priceScore < 0.7) {
             reasons.add("가격 적절");
         }
 
