@@ -286,10 +286,10 @@ public class RecommendService {
 
         switch (condition.getPriceLevel()) {
             case "LOW":
-                return price <= 10000;
+                return price < 8000;
 
             case "MEDIUM":
-                return price > 10000 && price < 15000;
+                return price >= 8000 && price < 15000;
 
             case "HIGH":
                 return price >= 15000;
@@ -320,10 +320,14 @@ public class RecommendService {
         Weight w = getWeight(purpose);
 
         // 2. 값 정규화
-        double crowd = h.getCrowd() / 100.0;
         double price = h.getPrice() / 20000.0;
+        if (price > 1) price = 1;
+
+        double facility = h.getFacilityCount() / 15.0;
+        if (facility > 1) facility = 1;
+
+        double crowd = h.getCrowd() / 100.0;
         double area = Math.min(h.getArea() / 100.0, 1);
-        double facility = h.getFacilityCount() / 10.0;
         double cond = (5 - h.getGrade()) / 4.0;
 
         // 3. Level 변환 (null → MID)

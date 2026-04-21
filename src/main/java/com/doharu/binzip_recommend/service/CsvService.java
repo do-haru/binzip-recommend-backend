@@ -63,7 +63,12 @@ public class CsvService {
                         .map(Integer::parseInt)
                         .toList();
 
-                int price = Integer.parseInt(parts[20]);
+                int price = Integer.parseInt(
+                        parts[20]
+                                .replace("\"", "")
+                                .replace(",", "")
+                                .trim()
+                );
 
                 BackData data = new BackData(
                         latitude,
